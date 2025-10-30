@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sayı Tahmin Oyunu</title>
+<style>
+  /* Animasyonlu gradient arka plan */
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    transition: background 0.5s;
+  }
+
+  .game-container {
+    text-align: center;
+    background: rgba(255,255,255,0.95);
+    padding: 40px 50px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 400px;
+  }
+
+  h1 { color: #333; font-size: 32px; margin-bottom: 20px; }
+
+  /* Zorluk butonları */
+  button {
+    padding: 15px 25px;
+    font-size: 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(145deg, #4facfe, #00f2fe);
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+  }
+
+  button:hover {
+    transform: translateY(-3px) scale(1.05);
+    background: linear-gradient(145deg, #00f2fe, #4facfe);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+
+  input {
+    padding: 15px 20px;
+    font-size: 20px;
+    width: 100%;
+    border: 2px solid #888;
+    border-radius: 15px;
+    outline: none;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    transition: 0.3s;
+    margin-top: 10px;
+    box-sizing: border-box;
+  }
+
+  input:focus {
+    border-color: #0077ff;
+    box-shadow: 2px 2px 12px rgba(0,119,255,0.3);
+  }
+
+  #message {
+    margin-top: 20px;
+    font-weight: bold;
+    font-size: 24px;
+    min-height: 30px;
+  }
+
+  #range, #attempts { margin-top: 10px; font-weight: bold; font-size: 18px; }
+
+  .lose { color: red; font-size: 32px; }
+  .win { color: #28a745; font-size: 32px; } /* Açık yeşil kazanma yazısı */
+
+  .hidden { display: none; }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 28px; }
+    #message { font-size: 20px; }
+    input, button { font-size: 18px; padding: 12px 15px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Zorluk Seçim Alanı -->
+<div class="game-container" id="difficulty-container">
+  <h1>Zorluk Seç</h1>
+  <button onclick="startGame('kolay')">Kolay</button>
+  <button onclick="startGame('orta')">Orta</button>
+  <button onclick="startGame('zor')">Zor</button>
+</div>
+
+<!-- Oyun Alanı -->
+<div class="game-container hidden" id="game-container">
+  <h1>Sayı Tahmin Oyunu</h1>
+  <p id="range"></p>
+  <input type="number" id="guess" placeholder="Tahmin">
+  <p id="message"></p>
+  <p id="attempts"></p>
+  <button id="resetBtn" onclick="resetGame()">Tekrar Oyna</button>
+</div>
+
+<script>
+  let min, max, randomNumber, attempts, maxAttempts;
+  const gameContainer = document.getElementById('game-container');
+  const difficultyContainer = document.getElementById('difficulty-container');
+  const guessInput = document.getElementById('guess');
+  const message = document.getElementById('message');
+  const rangeDisplay = document.getElementById('range');
+  const attemptsDisplay = document.getElementById('attempts');
+  const resetBtn = document.getElementById('resetBtn');
+
+  function startGame(level) {
+    attempts = 0;
+    switch(level) {
+      case 'kolay':
+        min = 1; max = 100; maxAttempts = 10;
+        break;
+      case 'orta':
+        min = 1; max = 500; maxAttempts = 10;
+        break;
+      case 'zor':
+        min = 1; max = 1000; maxAttempts = 8; // Zor için 8 deneme
+        break;
+    }
+    randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+
+    difficultyContainer.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+
+    rangeDisplay.textContent = `${min} - ${max}`;
+    attemptsDisplay.textContent = `Deneme: 0 / ${maxAttempts}`;
+    guessInput.value = '';
+    guessInput.disabled = false;
+    message.textContent = '';
+    document.body.style.background = 'linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb)';
+    guessInput.focus();
+  }
+
+  function checkGuess() {
+    let guess = guessInput.value.trim();
+    if (guess === '' || isNaN(guess)) {
+      message.textContent = 'Lütfen geçerli bir sayı gir!';
+      message.className = '';
+      return;
+    }
+
+    guess = Number(guess);
+    if (guess < min || guess > max) {
+      message.textContent = `Lütfen ${min} - ${max} arasında bir sayı gir!`;
+      message.className = '';
+      return;
+    }
+
+    attempts++;
+    attemptsDisplay.textContent = `Deneme: ${attempts} / ${maxAttempts}`;
+
+    if (guess < randomNumber) {
+      min = guess + 1;
+      message.textContent = 'Daha büyük bir sayı dene!';
+      message.className = '';
+    } else if (guess > randomNumber) {
+      max = guess - 1;
+      message.textContent = 'Daha küçük bir sayı dene!';
+      message.className = '';
+    } else {
+      message.textContent = `🎉 Tebrikler! ${attempts} denemede doğru tahmin ettin! 🎉`;
+      message.className = 'win';
+      document.body.style.background = '#bfffbf'; // Açık yeşil arka plan
+      guessInput.disabled = true;
+      resetBtn.style.display = 'inline-block';
+      return;
+    }
+
+    if (attempts >= maxAttempts) {
+      message.textContent = `KAYBETTİN! Doğru sayı ${randomNumber} idi.`;
+      message.className = 'lose';
+      document.body.style.background = '#ffa0a0';
+      guessInput.disabled = true;
+      resetBtn.style.display = 'inline-block';
+    }
+
+    rangeDisplay.textContent = `${min} - ${max}`;
+    guessInput.value = '';
+    guessInput.focus();
+  }
+
+  function resetGame() {
+    gameContainer.classList.add('hidden');
+    difficultyContainer.classList.remove('hidden');
+  }
+
+  guessInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkGuess();
+  });
+</script>
+
+</body>
+</html>
+
